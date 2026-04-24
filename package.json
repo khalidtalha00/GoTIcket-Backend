@@ -1,0 +1,21 @@
+{
+  "name": "go-tickets-server",
+  "version": "1.0.0",
+  "description": "Backend for Go Tickets",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "vercel-start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.22.1",
+    "mongoose": "^8.0.3",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
