@@ -15,32 +15,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-
-    const allowed = [
-      process.env.FRONTEND_URL,
-      process.env.FRONTEND_URL_2,
-      "https://go-ticket123.vercel.app",
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-    ].filter(Boolean);
-
-    const isAllowed =
-      allowed.includes(origin) ||
-      origin.endsWith(".vercel.app");
-
-    if (isAllowed) return callback(null, true);
-    return callback(new Error(`CORS blocked: ${origin}`));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // important for preflight
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "go-t-icket-backend.vercel.app"
+  ],
+  credentials: true
+}));
 
 // Ensure uploads directory exists
 const uploadDir = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'uploads');
