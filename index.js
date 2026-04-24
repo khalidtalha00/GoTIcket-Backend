@@ -15,15 +15,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "go-t-icket-backend.vercel.app"
-  ],
-  credentials: true
-}));
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
-// Ensure uploads directory exists
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
 const uploadDir = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'uploads');
 try {
   if (!fs.existsSync(uploadDir)) {
@@ -33,7 +36,6 @@ try {
   console.warn('Could not create uploads directory:', err.message);
 }
 
-// Middleware
 app.use(express.json());
 app.use('/uploads', express.static(uploadDir));
 
@@ -46,7 +48,6 @@ async function connectToMongoDB() {
   console.log('Connected to MongoDB');
 }
 
-// Check DB connection before handling requests
 app.use(async (req, res, next) => {
   if (connected) return next();
 
@@ -59,7 +60,6 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/upload', uploadRoute);
@@ -71,8 +71,10 @@ app.get('/', (req, res) => {
   res.send('Go Tickets API is running');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
