@@ -16,22 +16,71 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ["https://goticket-delta.vercel.app/"], // add deployed frontend URL too
+  origin: [
+    "https://goticket-delta.vercel.app", 
+    "http://localhost:5173",
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
 
 app.options("*", cors());
-app.use(express.json());
 
-// example mount
-const authRoutes = require("./routes/auth");
-app.use("/api/auth", authRoutes);
+const uploadDir = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'uploads');
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Could not create uploads directory:', err.message);
+}
+
+app.use(express.json());
+app.use('/uploads', express.static(uploadDir));
+
+let connected = false;
+
+async function connectToMongoDB() {
+  if (connected) return;
+  await mongoose.connect(process.env.MONGO_URI);
+  connected = true;
+  console.log('Connected to MongoDB');
+}
+
+app.use(async (req, res, next) => {
+  if (connected) return next();
+
+  try {
+    await connectToMongoDB();
+    return next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    return res.status(503).json({ message: 'Database unavailable, try again shortly.' });
+  }
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/upload', uploadRoute);
+app.use('/api/metro', metroRoutes);
+app.use('/api/places', placesRoutes);
+app.use('/api/location', placesRoutes);
+
+app.get('/', (req, res) => {
+  res.send('Go Tickets API is running');
+});
 
 // JSON fallback for unknown routes
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
