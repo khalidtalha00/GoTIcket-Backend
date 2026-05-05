@@ -8,7 +8,8 @@ const TicketSchema = new mongoose.Schema({
   type: { type: String, required: true },
   price: { type: Number, required: true },
   date: { type: Date, default: Date.now },
-  status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' }
+  expiryTime: { type: String },
+  status: { type: String, enum: ['active', 'completed', 'cancelled', 'UNUSED', 'USED'], default: 'active' }
 });
 
 module.exports = mongoose.model('Ticket', TicketSchema);

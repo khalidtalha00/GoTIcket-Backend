@@ -3,10 +3,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Use same upload dir logic as index.js — /tmp on Vercel, server/uploads locally
+const uploadDir = path.join(process.env.VERCEL ? '/tmp' : path.join(__dirname, '..'), 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // Configure Multer Storage
